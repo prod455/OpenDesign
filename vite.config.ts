@@ -12,6 +12,7 @@ export default defineConfig({
   build: { outDir: "dist" },
   resolve: {
     alias: {
+      "@": fileURLToPath(new URL("./src/client", import.meta.url)),
       react: "preact/compat",
       "react-dom": "preact/compat",
       "react/jsx-runtime": "preact/jsx-runtime",

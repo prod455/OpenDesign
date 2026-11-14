@@ -2,6 +2,10 @@ import { useRef, useState } from "preact/hooks";
 import { ChevronDown, ChevronUp } from "lucide-preact";
 import { useEditor } from "../context";
 import { FONT_FAMILIES } from "../fonts";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { Field, FieldError, FieldTitle } from "./ui/field";
+import { Spinner } from "./ui/spinner";
 
 export function FontPicker({ value, onChange, label }: {
   value: string;
@@ -19,26 +23,32 @@ export function FontPicker({ value, onChange, label }: {
     ...customFonts,
   ];
 
-  return <div>
-    <label class="text-[11px] text-zinc-400 mb-1 block">{label}</label>
-    <button
-      type="button"
-      aria-label={`${label}: ${fonts.find((font) => font.family === value)?.name ?? `${value} (unavailable)`}`}
+  const current = fonts.find((font) => font.family === value)?.name ?? `${value} (unavailable)`;
+
+  return <Field>
+    <FieldTitle>{label}</FieldTitle>
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={`${label}: ${current}`}
       aria-expanded={open}
       aria-controls={id}
-      class="w-full flex items-center justify-between bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none cursor-pointer focus:border-accent"
+      class="w-full justify-between bg-card font-normal"
       onClick={() => setOpen(!open)}
     >
-      <span style={{ fontFamily: value }}>{fonts.find((font) => font.family === value)?.name ?? `${value} (unavailable)`}</span>
-      {open ? <ChevronUp size={14} class="text-zinc-400" /> : <ChevronDown size={14} class="text-zinc-400" />}
-    </button>
-    {open && <div id={id} role="group" aria-label="Available fonts" class="mt-1 max-h-56 overflow-y-auto bg-white border border-zinc-200 rounded-md shadow-lg p-1">
+      <span class="truncate" style={{ fontFamily: value }}>{current}</span>
+      {open ? <ChevronUp class="text-muted-foreground" /> : <ChevronDown class="text-muted-foreground" />}
+    </Button>
+    {open && <div id={id} role="group" aria-label="Available fonts" class="max-h-56 overflow-y-auto bg-popover text-popover-foreground border rounded-md shadow-md p-1">
       {fonts.map((font) => (
         <button
           key={font.family}
           type="button"
           aria-pressed={value === font.family}
-          class={`w-full flex items-center justify-between gap-3 text-left px-2 py-1.5 rounded cursor-pointer ${value === font.family ? "bg-accent/10 text-accent" : "bg-transparent text-zinc-700 hover:bg-zinc-50"}`}
+          class={cn(
+            "w-full flex items-center justify-between gap-3 text-left text-xs px-2 py-1.5 rounded-sm cursor-pointer outline-none focus-visible:bg-accent",
+            value === font.family ? "bg-accent text-accent-foreground" : "bg-transparent hover:bg-accent hover:text-accent-foreground"
+          )}
           onClick={() => { onChange(font.family); setOpen(false); }}
         >
           <span class="truncate" style={{ fontFamily: font.family }}>{font.name}</span>
@@ -46,12 +56,13 @@ export function FontPicker({ value, onChange, label }: {
         </button>
       ))}
     </div>}
-    <button
-      type="button"
+    <Button
+      variant="link"
+      size="xs"
       disabled={busy}
-      class="mt-1 text-[11px] text-accent bg-transparent border-none cursor-pointer disabled:opacity-50"
+      class="self-start h-auto px-0 has-[>svg]:px-0 text-[11px]"
       onClick={() => input.current?.click()}
-    >{busy ? "Importing…" : "Import font from computer…"}</button>
+    >{busy && <Spinner class="size-3" />}{busy ? "Importing…" : "Import font from computer…"}</Button>
     <input
       ref={input}
       type="file"
@@ -73,6 +84,6 @@ export function FontPicker({ value, onChange, label }: {
         }
       }}
     />
-    {error && <p role="alert" class="text-[11px] text-red-500 mt-1">{error}</p>}
-  </div>;
+    {error && <FieldError>{error}</FieldError>}
+  </Field>;
 }

@@ -1,8 +1,18 @@
 import { useRef, useState } from "preact/hooks";
-import { Upload, Plus, Trash2, Download, Wand2 } from "lucide-preact";
+import { Upload, Plus, Trash2, Download, Wand2, X, AlertCircle } from "lucide-preact";
 import { useEditor } from "../context";
 import { FontPicker } from "./font-picker";
 import { exportKit, importKit } from "../lib/kit-transfer";
+import { cn } from "../lib/utils";
+import { IconButton } from "./icon-button";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Button } from "./ui/button";
+import { Field, FieldDescription, FieldLabel, FieldTitle } from "./ui/field";
+import { Input } from "./ui/input";
+import { NativeSelect } from "./ui/native-select";
+import { Separator } from "./ui/separator";
+import { Spinner } from "./ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function BrandKitPanel() {
   const {
@@ -89,12 +99,20 @@ export function BrandKitPanel() {
     }
   };
 
+  const tile =
+    "w-full aspect-square rounded-md border cursor-pointer transition-all outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]";
+  const addTile = cn(
+    tile,
+    "border-dashed border-input bg-transparent flex items-center justify-center text-muted-foreground hover:border-primary hover:text-accent-foreground hover:bg-accent"
+  );
+  const removeBadge =
+    "absolute -top-1 -right-1 size-4 rounded-full bg-foreground text-background cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity flex items-center justify-center";
+
   return (
     <div class="flex flex-col gap-4">
       {/* Kit selector */}
       <div class="flex gap-1.5">
-        <select
-          class="flex-1 min-w-0 bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none cursor-pointer focus:border-accent"
+        <NativeSelect
           value={activeBrandKitId ?? ""}
           onChange={(e) => setActiveBrandKitId((e.target as HTMLSelectElement).value || null)}
           aria-label="Active brand kit"
@@ -105,30 +123,25 @@ export function BrandKitPanel() {
               {k.name}
             </option>
           ))}
-        </select>
-        <button
-          class="shrink-0 p-1.5 rounded-md border border-zinc-300 bg-white text-zinc-500 cursor-pointer hover:border-accent hover:text-accent transition-all"
-          onClick={() => createBrandKit()}
-          title="New brand kit"
-          aria-label="New brand kit"
-        >
-          <Plus size={14} />
-        </button>
+        </NativeSelect>
+        <IconButton label="New brand kit" variant="outline" class="shrink-0" onClick={() => createBrandKit()}>
+          <Plus />
+        </IconButton>
       </div>
 
       {!activeBrandKit ? (
-        <p class="text-[11px] text-zinc-400 leading-relaxed">
+        <FieldDescription class="leading-relaxed">
           A brand kit holds the colors, fonts and logos you reuse on every design. Create one, then
           apply it to any design in a click.
-        </p>
+        </FieldDescription>
       ) : (
         <>
           {/* Name */}
-          <div>
-            <label class="text-[11px] text-zinc-400 mb-1 block">Kit name</label>
-            <input
+          <Field>
+            <FieldLabel for="kit-name">Kit name</FieldLabel>
+            <Input
+              id="kit-name"
               type="text"
-              class="w-full bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent"
               value={activeBrandKit.name}
               onChange={(e) =>
                 updateBrandKit(activeBrandKit.id, {
@@ -136,26 +149,29 @@ export function BrandKitPanel() {
                 })
               }
             />
-          </div>
+          </Field>
 
           {/* Colors */}
-          <div>
-            <label class="text-[11px] text-zinc-400 mb-1.5 block">
-              Brand colors{" "}
-              <span class="text-zinc-300">— click to apply to selection</span>
-            </label>
+          <Field>
+            <FieldTitle>
+              <span>
+                Brand colors <span class="font-normal text-muted-foreground/70">— click to apply to selection</span>
+              </span>
+            </FieldTitle>
             <div class="grid grid-cols-5 gap-1.5">
               {activeBrandKit.colors.map((color, i) => (
                 <div key={`${color}-${i}`} class="relative group">
                   <button
-                    class="w-full aspect-square rounded-md border border-zinc-300 cursor-pointer transition-all hover:scale-110 hover:border-accent"
+                    type="button"
+                    class={cn(tile, "hover:scale-110 hover:border-primary")}
                     style={{ background: color }}
                     title={color}
                     aria-label={`Brand color ${color}`}
                     onClick={() => applyBrandColor(color)}
                   />
                   <button
-                    class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-zinc-700 text-white border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    type="button"
+                    class={removeBadge}
                     title={`Remove ${color}`}
                     aria-label={`Remove brand color ${color}`}
                     onClick={() =>
@@ -164,13 +180,13 @@ export function BrandKitPanel() {
                       })
                     }
                   >
-                    <span class="text-[9px] leading-none">×</span>
+                    <X class="size-2.5" />
                   </button>
                 </div>
               ))}
               {activeBrandKit.colors.length < 24 && (
-                <label class="w-full aspect-square rounded-md border border-dashed border-zinc-300 cursor-pointer flex items-center justify-center text-zinc-400 hover:border-accent hover:text-accent transition-all">
-                  <Plus size={14} />
+                <label class={addTile}>
+                  <Plus class="size-3.5" />
                   <input
                     type="color"
                     class="sr-only"
@@ -184,10 +200,10 @@ export function BrandKitPanel() {
                 </label>
               )}
             </div>
-          </div>
+          </Field>
 
           {/* Fonts */}
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-3">
             <FontPicker
               label="Heading font"
               value={activeBrandKit.heading_font}
@@ -201,22 +217,30 @@ export function BrandKitPanel() {
           </div>
 
           {/* Logos */}
-          <div>
-            <label class="text-[11px] text-zinc-400 mb-1.5 block">
-              Logos <span class="text-zinc-300">— click to place</span>
-            </label>
+          <Field>
+            <FieldTitle>
+              <span>
+                Logos <span class="font-normal text-muted-foreground/70">— click to place</span>
+              </span>
+            </FieldTitle>
             <div class="grid grid-cols-3 gap-1.5">
               {activeBrandKit.logos.map((url, i) => (
                 <div key={url} class="relative group">
                   <button
-                    class="w-full aspect-square rounded-md border border-zinc-200 bg-[repeating-conic-gradient(#f4f4f5_0%_25%,#ffffff_0%_50%)] bg-[length:12px_12px] cursor-pointer p-1 hover:border-accent transition-all"
+                    type="button"
+                    class={cn(
+                      tile,
+                      "p-1 hover:border-primary bg-[repeating-conic-gradient(var(--muted)_0%_25%,var(--card)_0%_50%)] bg-[length:12px_12px]"
+                    )}
                     onClick={() => addImage(url)}
                     title="Add logo to canvas"
+                    aria-label="Add logo to canvas"
                   >
                     <img src={url} alt="" class="w-full h-full object-contain" />
                   </button>
                   <button
-                    class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-zinc-700 text-white border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    type="button"
+                    class={removeBadge}
                     aria-label="Remove logo"
                     onClick={() =>
                       updateBrandKit(activeBrandKit.id, {
@@ -224,17 +248,18 @@ export function BrandKitPanel() {
                       })
                     }
                   >
-                    <span class="text-[9px] leading-none">×</span>
+                    <X class="size-2.5" />
                   </button>
                 </div>
               ))}
               {activeBrandKit.logos.length < 12 && (
                 <button
-                  class="w-full aspect-square rounded-md border border-dashed border-zinc-300 cursor-pointer flex items-center justify-center text-zinc-400 hover:border-accent hover:text-accent transition-all"
+                  type="button"
+                  class={addTile}
                   onClick={() => logoInputRef.current?.click()}
                   aria-label="Upload logo"
                 >
-                  <Upload size={14} />
+                  <Upload class="size-3.5" />
                 </button>
               )}
             </div>
@@ -245,52 +270,56 @@ export function BrandKitPanel() {
               class="hidden"
               onChange={(e) => handleLogoUpload((e.target as HTMLInputElement).files)}
             />
-          </div>
+          </Field>
 
-          {/* Apply */}
-          <button
-            class="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-accent text-white border-none cursor-pointer text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-            onClick={() => applyBrandKit(activeBrandKit)}
-            disabled={activeBrandKit.colors.length === 0}
-            title={
-              activeBrandKit.colors.length === 0
+          {/* Apply: the panel's one primary action */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* A span so the tooltip still explains why the button is disabled. */}
+              <span class="block">
+                <Button
+                  size="sm"
+                  class="w-full"
+                  onClick={() => applyBrandKit(activeBrandKit)}
+                  disabled={activeBrandKit.colors.length === 0}
+                >
+                  <Wand2 />
+                  Apply to this page
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {activeBrandKit.colors.length === 0
                 ? "Add at least one brand color first"
-                : "Apply brand fonts and colors to this page"
-            }
-          >
-            <Wand2 size={13} />
-            Apply to this page
-          </button>
+                : "Apply brand fonts and colors to this page"}
+            </TooltipContent>
+          </Tooltip>
 
           {/* Portability */}
-          <div class="pt-1 border-t border-zinc-200">
-            <p class="text-[10px] text-zinc-400 mt-2 mb-1.5 leading-relaxed">
+          <Separator />
+          <div class="flex flex-col gap-2">
+            <FieldDescription class="leading-relaxed">
               Your kit is a plain JSON file. Take it to another OpenDesign install, or hand it to a
               client.
-            </p>
+            </FieldDescription>
             <div class="flex gap-1.5">
-              <button
-                class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-zinc-300 bg-white text-[11px] text-zinc-500 cursor-pointer hover:border-accent hover:text-accent transition-all"
-                onClick={handleExport}
-              >
-                <Download size={12} />
+              <Button variant="outline" size="xs" class="flex-1" onClick={handleExport}>
+                <Download />
                 Export
-              </button>
-              <button
-                class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-zinc-300 bg-white text-[11px] text-zinc-500 cursor-pointer hover:border-accent hover:text-accent transition-all"
-                onClick={() => importInputRef.current?.click()}
-              >
-                <Upload size={12} />
+              </Button>
+              <Button variant="outline" size="xs" class="flex-1" onClick={() => importInputRef.current?.click()}>
+                <Upload />
                 Import
-              </button>
-              <button
-                class="shrink-0 p-1.5 rounded-md border border-zinc-300 bg-white text-zinc-400 cursor-pointer hover:border-red-400 hover:text-red-500 transition-all"
+              </Button>
+              <IconButton
+                label="Delete this brand kit"
+                variant="outline"
+                size="icon-xs"
+                class="shrink-0 text-muted-foreground hover:text-destructive hover:border-destructive/50"
                 onClick={() => deleteBrandKit(activeBrandKit.id)}
-                title="Delete this kit"
-                aria-label="Delete this brand kit"
               >
-                <Trash2 size={12} />
-              </button>
+                <Trash2 />
+              </IconButton>
             </div>
             <input
               ref={importInputRef}
@@ -299,8 +328,18 @@ export function BrandKitPanel() {
               class="hidden"
               onChange={(e) => handleImport((e.target as HTMLInputElement).files)}
             />
-            {busy && <p class="text-[10px] text-zinc-400 mt-1.5">{busy}</p>}
-            {error && <p class="text-[10px] text-red-500 mt-1.5">{error}</p>}
+            {busy && (
+              <p class="m-0 flex items-center gap-1.5 text-[11px] text-muted-foreground" role="status">
+                <Spinner class="size-3" />
+                {busy}
+              </p>
+            )}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
           </div>
         </>
       )}

@@ -4,6 +4,7 @@ import type { Template, BrandKit } from "../types";
 import { reflowCanvas, type Dimensions } from "../resize";
 import { buildColorMap, brandFontFor, isHex } from "../lib/brand";
 import { downloadDataURL, exportPagesToPDF, renderPageToPNG, slugify } from "../lib/export";
+import { PRIMARY_HEX } from "../lib/theme";
 
 const MAX_HISTORY = 50;
 
@@ -14,7 +15,7 @@ const TEXT_PRESETS = {
 } as const;
 
 const SHAPE_DEFAULTS = {
-  fill: "#6366f1",
+  fill: PRIMARY_HEX,
   stroke: "",
   strokeWidth: 0,
   opacity: 1,
@@ -229,7 +230,7 @@ export function useCanvasState(onChange: () => void = () => {}) {
           break;
         case "line":
           obj = new fabric.Line([cx - 100, cy, cx + 100, cy], {
-            stroke: "#6366f1",
+            stroke: PRIMARY_HEX,
             strokeWidth: 3,
             fill: "",
           });

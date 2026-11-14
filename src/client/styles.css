@@ -1,65 +1,95 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-@theme {
-  --color-surface: #F3F4F7;
-  --color-surface-secondary: #FFFFFF;
-  --color-surface-card: #FFFFFF;
-  --color-surface-hover: #E8EAEF;
-  --color-border-dim: #E2E5EB;
-  --color-border-mid: #D1D5DB;
-  --color-accent: #6366f1;
-  --color-accent-hover: #4f46e5;
-  --color-accent-light: rgba(99, 102, 241, 0.08);
+/*
+ * Design tokens (shadcn/ui convention). Every colour in the interface comes
+ * from here; components never write a colour by hand. See DESIGN.md.
+ *
+ * Palette "Petróleo e Areia": petrol blue for the one primary action, warm
+ * sand neutrals for surfaces and lines.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: oklch(0.982 0.006 85);
+  --foreground: oklch(0.235 0.022 232);
+  --card: oklch(0.996 0.003 85);
+  --card-foreground: oklch(0.235 0.022 232);
+  --popover: oklch(0.996 0.003 85);
+  --popover-foreground: oklch(0.235 0.022 232);
+  --primary: oklch(0.49 0.085 222);
+  --primary-foreground: oklch(0.985 0.008 85);
+  --secondary: oklch(0.948 0.012 85);
+  --secondary-foreground: oklch(0.3 0.03 232);
+  --muted: oklch(0.948 0.012 85);
+  --muted-foreground: oklch(0.5 0.022 232);
+  --accent: oklch(0.935 0.026 215);
+  --accent-foreground: oklch(0.33 0.07 222);
+  --destructive: oklch(0.56 0.2 27);
+  --border: oklch(0.905 0.013 85);
+  --input: oklch(0.875 0.015 85);
+  --ring: oklch(0.6 0.09 222);
+  /* The grey-sand desk the canvas pages sit on. */
+  --workspace: oklch(0.935 0.012 85);
 }
 
-/* ── Base ──────────────────────────────────────────────────────────── */
-html, body, #app {
-  @apply h-full w-full overflow-hidden;
+@theme inline {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-workspace: var(--workspace);
 }
 
-body {
-  @apply bg-surface text-zinc-800 text-[13px] antialiased;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html, body, #app {
+    @apply h-full w-full overflow-hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans text-[13px] antialiased;
+  }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-zinc-300 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-zinc-400; }
-
-/* ── Spinner ───────────────────────────────────────────────────────── */
-.spinner {
-  @apply inline-block w-3.5 h-3.5 rounded-full border-2 border-zinc-300 border-t-current;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
+::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
 
 /* ── Canvas area ───────────────────────────────────────────────────── */
 .canvas-container {
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.08),
-    0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+    0 0 0 1px oklch(0.235 0.022 232 / 0.08),
+    0 25px 50px -12px oklch(0.235 0.022 232 / 0.18) !important;
 }
 
-/* ── Custom range slider ───────────────────────────────────────────── */
-input[type="range"] {
-  @apply appearance-none bg-transparent cursor-pointer;
-  height: 4px;
-}
-
-input[type="range"]::-webkit-slider-track {
-  @apply bg-zinc-200 rounded-full;
-  height: 4px;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  @apply appearance-none w-3.5 h-3.5 rounded-full bg-accent border-2 border-white;
-  margin-top: -5px;
-}
-
-/* ── Color picker ──────────────────────────────────────────────────── */
+/* ── Native colour input (no shadcn equivalent) ────────────────────── */
 input[type="color"] {
   @apply appearance-none bg-transparent cursor-pointer p-0;
 }
@@ -73,11 +103,28 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 4px;
 }
 
-/* ── Select ────────────────────────────────────────────────────────── */
-select {
-  @apply appearance-none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  padding-right: 28px;
+/* ── Slider (components/ui/slider.tsx) ─────────────────────────────── */
+.slider {
+  @apply h-4 appearance-none bg-transparent cursor-pointer outline-none;
+}
+.slider::-webkit-slider-runnable-track {
+  @apply h-1.5 rounded-full;
+  background: linear-gradient(to right, var(--primary) var(--slider-fill), var(--muted) var(--slider-fill));
+}
+.slider::-moz-range-track {
+  @apply h-1.5 rounded-full bg-muted;
+}
+.slider::-moz-range-progress {
+  @apply h-1.5 rounded-full bg-primary;
+}
+.slider::-webkit-slider-thumb {
+  @apply appearance-none size-3.5 rounded-full border border-primary bg-card shadow-sm transition-[box-shadow];
+  margin-top: -4px;
+}
+.slider::-moz-range-thumb {
+  @apply size-3.5 rounded-full border border-primary bg-card shadow-sm;
+}
+.slider:hover::-webkit-slider-thumb,
+.slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--ring) 50%, transparent);
 }

@@ -1,6 +1,9 @@
 import { useState } from "preact/hooks";
 import { Trash2, Edit3, Plus } from "lucide-preact";
 import { useEditor } from "../context";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 export function DesignList() {
   const { designs, activeDesign, createDesign, loadDesign, deleteDesign, renameDesign, navigate } =
@@ -20,37 +23,38 @@ export function DesignList() {
 
   return (
     <div class="flex flex-col gap-2">
-      <button
-        class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer bg-accent text-zinc-900 hover:bg-accent-hover transition-all"
+      <Button
+        size="sm"
+        class="w-full"
         onClick={async () => {
           const id = await createDesign();
           if (id) navigate(`/design/${id}`);
         }}
       >
-        <Plus size={14} />
+        <Plus />
         New Design
-      </button>
+      </Button>
 
       {designs.length === 0 && (
-        <p class="text-zinc-400 text-[11px] text-center py-4">No saved designs yet</p>
+        <p class="m-0 text-muted-foreground text-[11px] text-center py-4">No saved designs yet</p>
       )}
 
       {designs.map((d) => (
         <div
           key={d.id}
-          class={`flex items-center px-2.5 py-2 rounded-lg border transition-all group cursor-pointer ${
-            activeDesign?.id === d.id
-              ? "border-accent bg-accent/10"
-              : "border-zinc-200 bg-white hover:border-zinc-600"
-          }`}
+          class={cn(
+            "flex items-center gap-1 px-2.5 py-2 rounded-lg border transition-all group cursor-pointer",
+            activeDesign?.id === d.id ? "border-primary bg-accent" : "bg-card hover:border-input hover:bg-muted"
+          )}
           onClick={() => {
             navigate(`/design/${d.id}`);
             loadDesign(d.id);
           }}
         >
           {editingId === d.id ? (
-            <input
-              class="flex-1 bg-zinc-100 border border-accent rounded text-zinc-700 text-xs px-1.5 py-0.5 outline-none"
+            <Input
+              class="h-7 flex-1"
+              aria-label="Design name"
               value={editName}
               onInput={(e) => setEditName((e.target as HTMLInputElement).value)}
               onBlur={finishRename}
@@ -63,32 +67,36 @@ export function DesignList() {
             />
           ) : (
             <div class="flex-1 min-w-0">
-              <span class="text-xs font-medium text-zinc-600 truncate block">{d.name}</span>
-              <span class="text-[10px] text-zinc-600">
-                {d.width}x{d.height} &middot;{" "}
-                {new Date(d.updated_at).toLocaleDateString()}
+              <span class="text-xs font-medium truncate block">{d.name}</span>
+              <span class="text-[10px] text-muted-foreground">
+                {d.width}x{d.height} &middot; {new Date(d.updated_at).toLocaleDateString()}
               </span>
             </div>
           )}
-          <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-            <button
-              class="p-1 rounded text-zinc-400 bg-transparent border-none cursor-pointer hover:text-zinc-800 transition-colors"
+          <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Rename ${d.name}`}
               onClick={(e) => {
                 e.stopPropagation();
                 startRename(d.id, d.name);
               }}
             >
-              <Edit3 size={12} />
-            </button>
-            <button
-              class="p-1 rounded text-zinc-400 bg-transparent border-none cursor-pointer hover:text-red-400 transition-colors"
+              <Edit3 />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="hover:text-destructive"
+              aria-label={`Delete ${d.name}`}
               onClick={(e) => {
                 e.stopPropagation();
                 deleteDesign(d.id);
               }}
             >
-              <Trash2 size={12} />
-            </button>
+              <Trash2 />
+            </Button>
           </div>
         </div>
       ))}

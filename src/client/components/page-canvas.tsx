@@ -2,6 +2,7 @@ import { useRef, useEffect } from "preact/hooks";
 import * as fabric from "fabric";
 import { useEditor } from "../context";
 import type { Page } from "../types";
+import { PRIMARY_HEX } from "../lib/theme";
 
 interface PageCanvasProps {
   page: Page;
@@ -39,12 +40,12 @@ export function PageCanvas({ page, isActive, width, height, onActivate }: PageCa
     // Custom control appearance — applied per-object via object:added
     const CONTROL_STYLE = {
       transparentCorners: false,
-      borderColor: "#6366f1",
+      borderColor: PRIMARY_HEX,
       borderScaleFactor: 1.5,
       padding: 6,
       cornerSize: 14,
       cornerColor: "#ffffff",
-      cornerStrokeColor: "#6366f1",
+      cornerStrokeColor: PRIMARY_HEX,
       cornerStyle: "circle" as const,
     };
 
@@ -62,7 +63,7 @@ export function PageCanvas({ page, isActive, width, height, onActivate }: PageCa
       ctx.beginPath();
       ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
       ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#6366f1";
+      ctx.strokeStyle = PRIMARY_HEX;
       ctx.lineWidth = 2;
       ctx.fill();
       ctx.stroke();
@@ -85,7 +86,7 @@ export function PageCanvas({ page, isActive, width, height, onActivate }: PageCa
         ctx.beginPath();
         ctx.roundRect(-w / 2, -h / 2, w, h, 4);
         ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#6366f1";
+        ctx.strokeStyle = PRIMARY_HEX;
         ctx.lineWidth = 2;
         ctx.fill();
         ctx.stroke();
@@ -154,7 +155,7 @@ export function PageCanvas({ page, isActive, width, height, onActivate }: PageCa
 
   return (
     <div
-      class={`shadow-lg rounded-lg overflow-hidden ${isActive ? "ring-2 ring-[#6366f1]" : ""}`}
+      class={`shadow-lg rounded-lg overflow-hidden ${isActive ? "ring-2 ring-primary" : ""}`}
       style={{ width, height }}
     >
       <canvas ref={canvasElRef} />

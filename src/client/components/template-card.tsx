@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "preact/hooks";
 import * as fabric from "fabric";
 import type { Template } from "../types";
+import { Skeleton } from "./ui/skeleton";
 
 interface Props {
   template: Template;
@@ -42,30 +43,25 @@ export function TemplateCard({ template, onClick }: Props) {
 
   return (
     <button
-      class="group relative bg-white border border-zinc-200 rounded-lg overflow-hidden cursor-pointer transition-all hover:border-accent hover:shadow-lg hover:shadow-accent/10 p-0"
+      type="button"
+      class="group relative self-start flex flex-col bg-card text-card-foreground border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-primary hover:shadow-md p-0 text-left outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
       onClick={onClick}
     >
       {/* Preview area */}
       <div
-        class="w-full flex items-center justify-center bg-zinc-50 overflow-hidden"
+        class="w-full flex items-center justify-center bg-muted overflow-hidden"
         style={{ aspectRatio: `${template.width} / ${template.height}` }}
       >
         {preview ? (
-          <img
-            src={preview}
-            alt={template.name}
-            class="w-full h-full object-contain"
-          />
+          <img src={preview} alt={template.name} class="w-full h-full object-contain" />
         ) : (
-          <span class="text-zinc-300 text-[10px] font-medium">Loading...</span>
+          <Skeleton class="w-full h-full rounded-none" />
         )}
       </div>
       {/* Label */}
-      <div class="px-2 py-1.5 border-t border-zinc-200">
-        <span class="text-[10px] text-zinc-600 font-medium truncate block">
-          {template.name}
-        </span>
-        <span class="text-[9px] text-zinc-400">
+      <div class="w-full px-2 py-1.5 border-t flex flex-col gap-0.5">
+        <span class="text-[10px] font-medium truncate block">{template.name}</span>
+        <span class="text-[9px] text-muted-foreground">
           {template.width}&times;{template.height}
         </span>
       </div>

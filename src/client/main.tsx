@@ -1,6 +1,7 @@
 import { render } from "preact";
 import * as fabric from "fabric";
 import { App } from "./app";
+import { TooltipProvider } from "./components/ui/tooltip";
 import "./styles.css";
 
 // Fabric v6 drops unknown properties on serialize, and `canvas.toJSON()` takes
@@ -8,4 +9,9 @@ import "./styles.css";
 // survive every save and reload, without touching the toJSON call sites.
 fabric.FabricObject.customProperties = ["fieldName"];
 
-render(<App />, document.getElementById("app")!);
+render(
+  <TooltipProvider>
+    <App />
+  </TooltipProvider>,
+  document.getElementById("app")!
+);

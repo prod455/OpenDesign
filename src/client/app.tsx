@@ -8,6 +8,8 @@ import { Home } from "./components/home";
 import { useFonts } from "./fonts";
 import { AppNav, embedded, reportLocation } from "@clawnify/app/client";
 import { useEffect, useRef } from "preact/hooks";
+import { Button } from "./components/ui/button";
+import { Spinner } from "./components/ui/spinner";
 
 export function App() {
   const { path, navigate, designId } = useRouter();
@@ -69,8 +71,8 @@ export function App() {
 
   if (fontState.fontsError) {
     return <div class="flex flex-col items-center justify-center gap-3 h-full" role="alert">
-      <p>{fontState.fontsError}</p>
-      <button class="px-3 py-2 border rounded cursor-pointer" onClick={() => window.location.reload()}>Reload</button>
+      <p class="m-0 text-sm">{fontState.fontsError}</p>
+      <Button variant="outline" onClick={() => window.location.reload()}>Reload</Button>
     </div>;
   }
 
@@ -79,11 +81,9 @@ export function App() {
     return (
       <>
       {hostNav}
-      <div class="flex items-center justify-center h-full bg-[#F3F4F7]">
-        <div class="text-center">
-          <div class="spinner !w-6 !h-6 !border-accent/30 !border-t-accent mb-3 mx-auto" />
-          <p class="text-zinc-400 text-sm">Loading...</p>
-        </div>
+      <div class="flex flex-col items-center justify-center gap-3 h-full bg-workspace" role="status">
+        <Spinner class="size-6 text-primary" />
+        <p class="m-0 text-muted-foreground text-sm">Loading…</p>
       </div>
       </>
     );

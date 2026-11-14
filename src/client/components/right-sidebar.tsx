@@ -1,4 +1,5 @@
 import { useState, useEffect } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import {
   Bold,
   Italic,
@@ -17,7 +18,16 @@ import {
 } from "lucide-preact";
 import * as fabric from "fabric";
 import { useEditor } from "../context";
+import { PRIMARY_HEX } from "../lib/theme";
 import { FontPicker } from "./font-picker";
+import { IconButton } from "./icon-button";
+import { Button } from "./ui/button";
+import { Field, FieldDescription, FieldLabel, FieldTitle } from "./ui/field";
+import { Input } from "./ui/input";
+import { Slider } from "./ui/slider";
+import { Toggle } from "./ui/toggle";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 /**
  * The active kit's colours, offered wherever a colour is chosen. This is what
@@ -28,11 +38,12 @@ function BrandSwatches({ onPick }: { onPick: (color: string) => void }) {
   const { activeBrandKit } = useEditor();
   if (!activeBrandKit || activeBrandKit.colors.length === 0) return null;
   return (
-    <div class="flex flex-wrap gap-1 mt-1.5">
+    <div class="flex flex-wrap gap-1">
       {activeBrandKit.colors.map((color, i) => (
         <button
           key={`${color}-${i}`}
-          class="w-5 h-5 rounded border border-zinc-300 cursor-pointer transition-all hover:scale-110 hover:border-accent"
+          type="button"
+          class="size-5 rounded border cursor-pointer transition-all hover:scale-110 hover:border-primary outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           style={{ background: color }}
           title={`${activeBrandKit.name} — ${color}`}
           aria-label={`Use brand color ${color}`}
@@ -68,12 +79,13 @@ function FieldNameInput({
   };
 
   return (
-    <div>
-      <label class="text-[11px] text-zinc-400 mb-1 block">Field name</label>
-      <input
+    <Field>
+      <FieldLabel for="field-name">Field name</FieldLabel>
+      <Input
+        id="field-name"
         type="text"
         placeholder="e.g. headline"
-        class="w-full bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent font-mono"
+        class="font-mono"
         value={draft}
         onInput={(e) => setDraft((e.target as HTMLInputElement).value)}
         onBlur={commit}
@@ -81,12 +93,66 @@ function FieldNameInput({
           if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
       />
-      <p class="text-[10px] text-zinc-400 mt-1 leading-snug">
+      <FieldDescription>
         {saved
           ? "Fillable through the design's /fill endpoint."
           : "Name it to fill it from data or an agent."}
-      </p>
-    </div>
+      </FieldDescription>
+    </Field>
+  );
+}
+
+/** A colour picker beside its hex value, which can also be typed. */
+function ColorField({ id, label, value, onChange, children }: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (color: string) => void;
+  children?: ComponentChildren;
+}) {
+  return (
+    <Field>
+      <FieldLabel for={id}>{label}</FieldLabel>
+      <div class="flex items-center gap-2">
+        <input
+          type="color"
+          aria-label={`${label} picker`}
+          class="size-8 rounded-md border border-input cursor-pointer shrink-0"
+          value={value}
+          onInput={(e) => onChange((e.target as HTMLInputElement).value)}
+        />
+        {children ?? (
+          <Input
+            id={id}
+            type="text"
+            class="flex-1 font-mono"
+            value={value}
+            onInput={(e) => onChange((e.target as HTMLInputElement).value)}
+          />
+        )}
+      </div>
+    </Field>
+  );
+}
+
+/** A Slider with its label and current value on one line. */
+function SliderField({ label, display, value, min, max, step, onChange }: {
+  label: string;
+  display: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <Field>
+      <FieldTitle>
+        {label}
+        <span class="font-mono font-normal tabular-nums">{display}</span>
+      </FieldTitle>
+      <Slider aria-label={label} value={value} min={min} max={max} step={step} onValueChange={onChange} />
+    </Field>
   );
 }
 
@@ -103,37 +169,44 @@ export function RightSidebar() {
 
   if (!selectedObject) {
     return (
-      <aside class="w-[280px] bg-white border-l border-zinc-200 flex flex-col shrink-0">
-        <div class="p-4 border-b border-zinc-200">
-          <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Canvas</h2>
+      <aside class="w-[280px] bg-card border-l flex flex-col shrink-0">
+        <div class="h-12 px-4 border-b flex items-center">
+          <h2 class="m-0 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Canvas</h2>
         </div>
-        <div class="p-4 flex flex-col gap-3">
+        <div class="p-4 flex flex-col gap-4">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] text-zinc-400">Dimensions</span>
-            <span class="text-[11px] text-zinc-600 font-mono">{canvasWidth} x {canvasHeight}</span>
+            <span class="text-[11px] text-muted-foreground">Dimensions</span>
+            <span class="text-[11px] font-mono tabular-nums">{canvasWidth} x {canvasHeight}</span>
           </div>
-          <label class="text-[11px] text-zinc-400">Background color</label>
-          <input
-            type="color"
-            class="w-full h-8 rounded-md border border-zinc-300 cursor-pointer bg-transparent"
-            onChange={(e) => setBackground("color", (e.target as HTMLInputElement).value)}
-          />
-          <BrandSwatches onPick={(color) => setBackground("color", color)} />
+          <Field>
+            <FieldLabel for="canvas-bg">Background color</FieldLabel>
+            <input
+              id="canvas-bg"
+              type="color"
+              class="w-full h-8 rounded-md border border-input cursor-pointer"
+              onChange={(e) => setBackground("color", (e.target as HTMLInputElement).value)}
+            />
+            <BrandSwatches onPick={(color) => setBackground("color", color)} />
+          </Field>
         </div>
       </aside>
     );
   }
 
+  const o = selectedObject as any;
+  const isBold = o.fontWeight === "700" || o.fontWeight === "bold";
+
   return (
-    <aside class="w-[280px] bg-white border-l border-zinc-200 flex flex-col shrink-0 overflow-y-auto">
+    <aside class="w-[280px] bg-card border-l flex flex-col shrink-0 overflow-y-auto">
       {/* Header */}
-      <div class="p-4 border-b border-zinc-200 flex items-center justify-between">
-        <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+      <div class="h-12 px-4 border-b flex items-center justify-between">
+        <h2 class="m-0 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {isText ? "Text" : isImage ? "Image" : "Shape"}
         </h2>
-        <div class="flex gap-1">
-          <button
-            class="p-1 rounded text-zinc-400 bg-transparent border-none cursor-pointer hover:text-zinc-800 hover:bg-zinc-100 transition-all"
+        <div class="flex gap-0.5">
+          <IconButton
+            label="Duplicate"
+            size="icon-xs"
             onClick={async () => {
               if (!canvas || !selectedObject) return;
               const clone = await selectedObject.clone();
@@ -141,17 +214,17 @@ export function RightSidebar() {
               canvas.add(clone);
               canvas.setActiveObject(clone);
             }}
-            title="Duplicate"
           >
-            <Copy size={14} />
-          </button>
-          <button
-            class="p-1 rounded text-zinc-400 bg-transparent border-none cursor-pointer hover:text-red-400 hover:bg-red-500/10 transition-all"
+            <Copy />
+          </IconButton>
+          <IconButton
+            label="Delete"
+            size="icon-xs"
+            class="hover:text-destructive hover:bg-destructive/10"
             onClick={deleteSelected}
-            title="Delete"
           >
-            <Trash2 size={14} />
-          </button>
+            <Trash2 />
+          </IconButton>
         </div>
       </div>
 
@@ -164,8 +237,8 @@ export function RightSidebar() {
           />
         )}
 
-        <div>
-          <label class="text-[11px] text-zinc-400 mb-1 block">Layer order</label>
+        <Field>
+          <FieldTitle>Layer order</FieldTitle>
           <div class="flex gap-1">
             {([
               ["front", BringToFront, "To front", layerIndex === layerCount - 1],
@@ -173,316 +246,213 @@ export function RightSidebar() {
               ["backward", MoveDown, "Backward", layerIndex <= 0],
               ["back", SendToBack, "To back", layerIndex <= 0],
             ] as const).map(([action, Icon, label, disabled]) => (
-              <button
-                key={action}
-                type="button"
-                class="flex-1 flex justify-center p-1.5 rounded-md border border-zinc-300 bg-transparent text-zinc-500 cursor-pointer hover:text-zinc-900 hover:bg-zinc-100 disabled:opacity-35 disabled:cursor-not-allowed"
-                title={label}
-                aria-label={label}
-                disabled={layerIndex < 0 || disabled}
-                onClick={() => changeLayer(action)}
-              >
-                <Icon size={14} />
-              </button>
+              <Tooltip key={action}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    class="flex-1 text-muted-foreground"
+                    aria-label={label}
+                    disabled={layerIndex < 0 || disabled}
+                    onClick={() => changeLayer(action)}
+                  >
+                    <Icon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{label}</TooltipContent>
+              </Tooltip>
             ))}
           </div>
-        </div>
+        </Field>
 
         {/* ── Text properties ───────────────────────────────────────── */}
         {isText && (
           <>
-            {/* Font family */}
             <FontPicker
               label="Font family"
               value={(selectedObject as fabric.IText).fontFamily || "Inter"}
               onChange={(fontFamily) => updateSelectedObject({ fontFamily })}
             />
 
-            {/* Font size */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Font size</label>
-              <input
+            <Field>
+              <FieldLabel for="font-size">Font size</FieldLabel>
+              <Input
+                id="font-size"
                 type="number"
-                class="w-full bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent"
-                value={(selectedObject as any).fontSize || 18}
+                value={o.fontSize || 18}
                 onInput={(e) =>
                   updateSelectedObject({
                     fontSize: parseInt((e.target as HTMLInputElement).value) || 18,
                   })
                 }
               />
-            </div>
+            </Field>
 
-            {/* Bold / Italic / Underline */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Style</label>
+            <Field>
+              <FieldTitle>Style</FieldTitle>
               <div class="flex gap-1">
-                <button
-                  class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                    (selectedObject as any).fontWeight === "700" || (selectedObject as any).fontWeight === "bold"
-                      ? "bg-accent/20 border-accent text-accent"
-                      : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                  }`}
-                  onClick={() =>
-                    updateSelectedObject({
-                      fontWeight:
-                        (selectedObject as any).fontWeight === "700" || (selectedObject as any).fontWeight === "bold"
-                          ? "400"
-                          : "700",
-                    })
+                <Toggle
+                  variant="outline"
+                  aria-label="Bold"
+                  pressed={isBold}
+                  onPressedChange={() => updateSelectedObject({ fontWeight: isBold ? "400" : "700" })}
+                >
+                  <Bold />
+                </Toggle>
+                <Toggle
+                  variant="outline"
+                  aria-label="Italic"
+                  pressed={o.fontStyle === "italic"}
+                  onPressedChange={() =>
+                    updateSelectedObject({ fontStyle: o.fontStyle === "italic" ? "normal" : "italic" })
                   }
                 >
-                  <Bold size={14} />
-                </button>
-                <button
-                  class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                    (selectedObject as any).fontStyle === "italic"
-                      ? "bg-accent/20 border-accent text-accent"
-                      : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                  }`}
-                  onClick={() =>
-                    updateSelectedObject({
-                      fontStyle: (selectedObject as any).fontStyle === "italic" ? "normal" : "italic",
-                    })
-                  }
+                  <Italic />
+                </Toggle>
+                <Toggle
+                  variant="outline"
+                  aria-label="Underline"
+                  pressed={!!o.underline}
+                  onPressedChange={() => updateSelectedObject({ underline: !o.underline })}
                 >
-                  <Italic size={14} />
-                </button>
-                <button
-                  class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                    (selectedObject as any).underline
-                      ? "bg-accent/20 border-accent text-accent"
-                      : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                  }`}
-                  onClick={() =>
-                    updateSelectedObject({ underline: !(selectedObject as any).underline })
-                  }
-                >
-                  <Underline size={14} />
-                </button>
+                  <Underline />
+                </Toggle>
               </div>
-            </div>
+            </Field>
 
-            {/* Text alignment */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Alignment</label>
-              <div class="flex gap-1">
+            <Field>
+              <FieldTitle>Alignment</FieldTitle>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                aria-label="Alignment"
+                value={o.textAlign || ""}
+                onValueChange={(align: string) => align && updateSelectedObject({ textAlign: align })}
+              >
                 {[
-                  { align: "left", icon: AlignLeft },
-                  { align: "center", icon: AlignCenter },
-                  { align: "right", icon: AlignRight },
-                ].map(({ align, icon: Icon }) => (
-                  <button
-                    key={align}
-                    class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                      (selectedObject as any).textAlign === align
-                        ? "bg-accent/20 border-accent text-accent"
-                        : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                    }`}
-                    onClick={() => updateSelectedObject({ textAlign: align })}
-                  >
-                    <Icon size={14} />
-                  </button>
+                  { align: "left", icon: AlignLeft, label: "Align left" },
+                  { align: "center", icon: AlignCenter, label: "Align center" },
+                  { align: "right", icon: AlignRight, label: "Align right" },
+                ].map(({ align, icon: Icon, label }) => (
+                  <ToggleGroupItem key={align} value={align} aria-label={label} class="px-3">
+                    <Icon />
+                  </ToggleGroupItem>
                 ))}
-              </div>
-            </div>
+              </ToggleGroup>
+            </Field>
 
-            {/* Text color */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Color</label>
-              <div class="flex items-center gap-2">
-                <input
-                  type="color"
-                  class="w-8 h-8 rounded border border-zinc-300 cursor-pointer bg-transparent shrink-0"
-                  value={((selectedObject as any).fill as string) || "#ffffff"}
-                  onInput={(e) =>
-                    updateSelectedObject({ fill: (e.target as HTMLInputElement).value })
-                  }
-                />
-                <input
-                  type="text"
-                  class="flex-1 bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent font-mono"
-                  value={((selectedObject as any).fill as string) || "#ffffff"}
-                  onInput={(e) =>
-                    updateSelectedObject({ fill: (e.target as HTMLInputElement).value })
-                  }
-                />
-              </div>
-              <BrandSwatches onPick={(color) => updateSelectedObject({ fill: color })} />
-            </div>
+            <ColorField
+              id="text-color"
+              label="Color"
+              value={(o.fill as string) || "#ffffff"}
+              onChange={(fill) => updateSelectedObject({ fill })}
+            />
+            <BrandSwatches onPick={(color) => updateSelectedObject({ fill: color })} />
 
-            {/* Line height */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 flex justify-between">
-                Line height
-                <span class="text-zinc-400 font-mono">{((selectedObject as any).lineHeight || 1.2).toFixed(1)}</span>
-              </label>
-              <input
-                type="range"
-                min="0.8"
-                max="3"
-                step="0.1"
-                class="w-full accent-accent"
-                value={(selectedObject as any).lineHeight || 1.2}
-                onInput={(e) =>
-                  updateSelectedObject({
-                    lineHeight: parseFloat((e.target as HTMLInputElement).value),
-                  })
-                }
-              />
-            </div>
+            <SliderField
+              label="Line height"
+              display={(o.lineHeight || 1.2).toFixed(1)}
+              value={o.lineHeight || 1.2}
+              min={0.8}
+              max={3}
+              step={0.1}
+              onChange={(lineHeight) => updateSelectedObject({ lineHeight })}
+            />
 
-            {/* Letter spacing */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 flex justify-between">
-                Letter spacing
-                <span class="text-zinc-400 font-mono">{(selectedObject as any).charSpacing || 0}</span>
-              </label>
-              <input
-                type="range"
-                min="-200"
-                max="800"
-                step="10"
-                class="w-full accent-accent"
-                value={(selectedObject as any).charSpacing || 0}
-                onInput={(e) =>
-                  updateSelectedObject({
-                    charSpacing: parseInt((e.target as HTMLInputElement).value),
-                  })
-                }
-              />
-            </div>
+            <SliderField
+              label="Letter spacing"
+              display={String(o.charSpacing || 0)}
+              value={o.charSpacing || 0}
+              min={-200}
+              max={800}
+              step={10}
+              onChange={(charSpacing) => updateSelectedObject({ charSpacing })}
+            />
           </>
         )}
 
         {/* ── Shape properties ──────────────────────────────────────── */}
         {isShape && (
           <>
-            {/* Fill color */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Fill color</label>
-              <div class="flex items-center gap-2">
-                <input
-                  type="color"
-                  class="w-8 h-8 rounded border border-zinc-300 cursor-pointer bg-transparent shrink-0"
-                  value={(selectedObject.fill as string) || "#6366f1"}
-                  onInput={(e) =>
-                    updateSelectedObject({ fill: (e.target as HTMLInputElement).value })
-                  }
-                />
-                <input
-                  type="text"
-                  class="flex-1 bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent font-mono"
-                  value={(selectedObject.fill as string) || "#6366f1"}
-                  onInput={(e) =>
-                    updateSelectedObject({ fill: (e.target as HTMLInputElement).value })
-                  }
-                />
-              </div>
-              <BrandSwatches onPick={(color) => updateSelectedObject({ fill: color })} />
-            </div>
+            <ColorField
+              id="shape-fill"
+              label="Fill color"
+              value={(selectedObject.fill as string) || PRIMARY_HEX}
+              onChange={(fill) => updateSelectedObject({ fill })}
+            />
+            <BrandSwatches onPick={(color) => updateSelectedObject({ fill: color })} />
 
-            {/* Stroke */}
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Stroke color</label>
-              <div class="flex items-center gap-2">
-                <input
-                  type="color"
-                  class="w-8 h-8 rounded border border-zinc-300 cursor-pointer bg-transparent shrink-0"
-                  value={(selectedObject.stroke as string) || "#000000"}
-                  onInput={(e) =>
-                    updateSelectedObject({ stroke: (e.target as HTMLInputElement).value })
-                  }
-                />
-                <input
-                  type="number"
-                  class="w-16 bg-white border border-zinc-300 rounded-md text-xs text-zinc-700 px-2 py-1.5 outline-none focus:border-accent"
-                  value={selectedObject.strokeWidth || 0}
-                  min={0}
-                  placeholder="Width"
-                  onInput={(e) =>
-                    updateSelectedObject({
-                      strokeWidth: parseInt((e.target as HTMLInputElement).value) || 0,
-                    })
-                  }
-                />
-              </div>
-            </div>
+            <ColorField
+              id="shape-stroke-width"
+              label="Stroke color"
+              value={(selectedObject.stroke as string) || "#000000"}
+              onChange={(stroke) => updateSelectedObject({ stroke })}
+            >
+              <Input
+                id="shape-stroke-width"
+                type="number"
+                class="w-16"
+                aria-label="Stroke width"
+                value={selectedObject.strokeWidth || 0}
+                min={0}
+                placeholder="Width"
+                onInput={(e) =>
+                  updateSelectedObject({
+                    strokeWidth: parseInt((e.target as HTMLInputElement).value) || 0,
+                  })
+                }
+              />
+            </ColorField>
 
-            {/* Border radius (for rect) */}
             {selectedObject instanceof fabric.Rect && (
-              <div>
-                <label class="text-[11px] text-zinc-400 mb-1 flex justify-between">
-                  Border radius
-                  <span class="text-zinc-400 font-mono">{(selectedObject as any).rx || 0}px</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  class="w-full accent-accent"
-                  value={(selectedObject as any).rx || 0}
-                  onInput={(e) => {
-                    const val = parseInt((e.target as HTMLInputElement).value);
-                    updateSelectedObject({ rx: val, ry: val });
-                  }}
-                />
-              </div>
+              <SliderField
+                label="Border radius"
+                display={`${o.rx || 0}px`}
+                value={o.rx || 0}
+                min={0}
+                max={100}
+                step={1}
+                onChange={(val) => updateSelectedObject({ rx: val, ry: val })}
+              />
             )}
           </>
         )}
 
         {/* ── Image properties ──────────────────────────────────────── */}
         {isImage && (
-          <>
-            <div>
-              <label class="text-[11px] text-zinc-400 mb-1 block">Flip</label>
-              <div class="flex gap-1">
-                <button
-                  class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                    selectedObject.flipX
-                      ? "bg-accent/20 border-accent text-accent"
-                      : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                  }`}
-                  onClick={() => updateSelectedObject({ flipX: !selectedObject.flipX })}
-                >
-                  <FlipHorizontal size={14} />
-                </button>
-                <button
-                  class={`p-1.5 rounded-md border cursor-pointer transition-all ${
-                    selectedObject.flipY
-                      ? "bg-accent/20 border-accent text-accent"
-                      : "bg-transparent border-zinc-300 text-zinc-400 hover:text-zinc-900"
-                  }`}
-                  onClick={() => updateSelectedObject({ flipY: !selectedObject.flipY })}
-                >
-                  <FlipVertical size={14} />
-                </button>
-              </div>
+          <Field>
+            <FieldTitle>Flip</FieldTitle>
+            <div class="flex gap-1">
+              <Toggle
+                variant="outline"
+                aria-label="Flip horizontally"
+                pressed={!!selectedObject.flipX}
+                onPressedChange={() => updateSelectedObject({ flipX: !selectedObject.flipX })}
+              >
+                <FlipHorizontal />
+              </Toggle>
+              <Toggle
+                variant="outline"
+                aria-label="Flip vertically"
+                pressed={!!selectedObject.flipY}
+                onPressedChange={() => updateSelectedObject({ flipY: !selectedObject.flipY })}
+              >
+                <FlipVertical />
+              </Toggle>
             </div>
-          </>
+          </Field>
         )}
 
         {/* ── Common: Opacity ───────────────────────────────────────── */}
-        <div>
-          <label class="text-[11px] text-zinc-400 mb-1 flex justify-between">
-            Opacity
-            <span class="text-zinc-400 font-mono">{Math.round((selectedObject.opacity ?? 1) * 100)}%</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            class="w-full accent-accent"
-            value={selectedObject.opacity ?? 1}
-            onInput={(e) =>
-              updateSelectedObject({
-                opacity: parseFloat((e.target as HTMLInputElement).value),
-              })
-            }
-          />
-        </div>
+        <SliderField
+          label="Opacity"
+          display={`${Math.round((selectedObject.opacity ?? 1) * 100)}%`}
+          value={selectedObject.opacity ?? 1}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={(opacity) => updateSelectedObject({ opacity })}
+        />
       </div>
     </aside>
   );
