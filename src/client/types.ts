@@ -15,6 +15,9 @@ export interface Design {
   updated_at: string;
 }
 
+/** What a new design is made from: a template, or an imported image. */
+export type NewDesign = Pick<Template, "name" | "canvas_json" | "width" | "height">;
+
 export interface Page {
   id: string;
   design_id: string;

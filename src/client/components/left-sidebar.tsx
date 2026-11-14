@@ -19,6 +19,8 @@ import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Field, FieldDescription, FieldLabel, FieldTitle } from "./ui/field";
 import { Spinner } from "./ui/spinner";
+import { Separator } from "./ui/separator";
+import { NewFromImageButton } from "./new-from-image";
 
 type Section = "templates" | "brand" | "text" | "shapes" | "images" | "background" | "designs";
 
@@ -59,7 +61,8 @@ const BG_COLORS = [
 ];
 
 export function LeftSidebar() {
-  const { addText, addShape, addImage, setBackground, templates, loadTemplate } = useEditor();
+  const { addText, addShape, addImage, setBackground, templates, loadTemplate, createFromTemplate, navigate } =
+    useEditor();
   const [activeSection, setActiveSection] = useState<Section | null>("templates");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -244,6 +247,16 @@ export function LeftSidebar() {
                       multiple
                       class="hidden"
                       onChange={(e) => handleImageUpload((e.target as HTMLInputElement).files)}
+                    />
+                    <Separator class="my-2" />
+                    <FieldDescription>
+                      Start a new design at the image's full size. Resizing it later keeps the whole
+                      image, without cropping.
+                    </FieldDescription>
+                    <NewFromImageButton
+                      class="w-full"
+                      createFromTemplate={createFromTemplate}
+                      navigate={navigate}
                     />
                   </div>
                 )}

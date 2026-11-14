@@ -1,6 +1,6 @@
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { Design, Template, Page, BrandKit, CustomFont } from "./types";
+import type { Design, Template, Page, BrandKit, CustomFont, NewDesign } from "./types";
 import type * as fabric from "fabric";
 import type { Dimensions } from "./resize";
 
@@ -82,7 +82,7 @@ export interface EditorContextValue {
   activeDesign: Design | null;
   loadedDesignId: string | null;
   createDesign: () => Promise<string | undefined>;
-  createFromTemplate: (template: Template) => Promise<string | undefined>;
+  createFromTemplate: (template: NewDesign) => Promise<string | undefined>;
   loadDesign: (id: string) => Promise<void>;
   saveDesign: () => Promise<void>;
   deleteDesign: (id: string) => Promise<void>;

@@ -9,6 +9,8 @@ A design editor for creating professional social media graphics, especially Link
 - Brand kits — palette, heading/body fonts and logos, applied to a design in one
   step and portable between installs as JSON (`/api/brand-kits`)
 - Image uploads and placement
+- New design from an image at 100% (the frame takes the image's own size); resizing
+  it to any format keeps the whole image, uncropped, over a blurred fill
 - Multiple canvas sizes (1080x1080 square, 1080x1350 carousel, 1200x627 landscape)
 - Multi-page designs exported as one PDF, which is how a LinkedIn carousel is published
 - 2x PNG export, one page or all of them

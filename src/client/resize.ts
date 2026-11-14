@@ -5,6 +5,38 @@ export interface Dimensions {
   height: number;
 }
 
+/**
+ * How an object keeps its place when the frame is resized. Saved with the
+ * design (see `customProperties` in main.tsx), so a refit after a reload
+ * behaves like the first one.
+ *
+ * - `contain`: the whole object stays visible, as large as the frame allows.
+ * - `cover`: the object fills the frame; what overflows is hidden by the frame.
+ *
+ * The scale is always computed from the image's own pixels, never from its
+ * previous scale, so resizing back and forth loses nothing.
+ */
+export type Fit = "contain" | "cover";
+
+export function getFit(obj: fabric.FabricObject): Fit | null {
+  const fit = (obj as { fit?: unknown }).fit;
+  return fit === "contain" || fit === "cover" ? fit : null;
+}
+
+export function fitToFrame(
+  obj: fabric.FabricObject,
+  fit: Fit,
+  frame: { width: number; height: number }
+): void {
+  const w = obj.width || 1;
+  const h = obj.height || 1;
+  const pick = fit === "contain" ? Math.min : Math.max;
+  const scale = pick(frame.width / w, frame.height / h);
+  obj.set({ scaleX: scale, scaleY: scale });
+  obj.setXY(new fabric.Point(frame.width / 2, frame.height / 2), "center", "center");
+  obj.setCoords();
+}
+
 // A backdrop has to sit within this fraction of the frame's edge, and reach
 // this close to its far edge, to count as covering the canvas.
 const COVER_TOLERANCE = 0.02;
@@ -83,7 +115,8 @@ function scaleAndReposition(
 }
 
 /**
- * Refit every object on a canvas from one frame to another. Artwork scales
+ * Refit every object on a canvas from one frame to another. An object with a
+ * `fit` is refitted from its own pixels (see Fit). Other artwork scales
  * uniformly by the smaller of the two ratios, so nothing distorts and nothing
  * that fitted before is pushed outside the frame; positions are anchored to
  * the centre so the composition survives a change of aspect ratio.
@@ -98,7 +131,10 @@ export function reflowCanvas(
 
   const scale = Math.min(to.width / from.width, to.height / from.height);
   canvas.getObjects().forEach((obj, index) => {
-    if (isBackdrop(obj, index, from)) {
+    const fit = getFit(obj);
+    if (fit) {
+      fitToFrame(obj, fit, to);
+    } else if (isBackdrop(obj, index, from)) {
       stretchToFrame(obj, to);
     } else {
       scaleAndReposition(obj, from, to, scale);

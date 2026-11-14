@@ -1,7 +1,8 @@
 import { useState, useCallback } from "preact/hooks";
 import { Plus, Trash2, Edit3, Sparkles, Image as ImageIcon } from "lucide-preact";
-import type { Design, Template } from "../types";
+import type { Design, Template, NewDesign } from "../types";
 import { TemplateCard } from "./template-card";
+import { NewFromImageButton } from "./new-from-image";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardTitle } from "./ui/card";
@@ -14,7 +15,7 @@ interface HomeProps {
   createDesign: () => Promise<string | undefined>;
   deleteDesign: (id: string) => Promise<void>;
   renameDesign: (id: string, name: string) => Promise<void>;
-  createFromTemplate: (template: Template) => Promise<string | undefined>;
+  createFromTemplate: (template: NewDesign) => Promise<string | undefined>;
 }
 
 export function Home({
@@ -64,10 +65,13 @@ export function Home({
               {designs.length} design{designs.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Button onClick={handleCreate}>
-            <Plus />
-            New Design
-          </Button>
+          <div class="flex items-start gap-2">
+            <NewFromImageButton createFromTemplate={createFromTemplate} navigate={navigate} />
+            <Button onClick={handleCreate}>
+              <Plus />
+              New Design
+            </Button>
+          </div>
         </div>
       </header>
 

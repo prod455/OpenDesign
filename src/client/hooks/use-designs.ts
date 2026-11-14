@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "preact/hooks";
-import type { Design, DesignWithPages, Template, Page } from "../types";
+import type { Design, DesignWithPages, Template, Page, NewDesign } from "../types";
 import type { Dimensions } from "../resize";
 import { api } from "../api";
 
@@ -131,7 +131,7 @@ export function useDesigns(
     }
   }, []);
 
-  const createFromTemplate = useCallback(async (template: Template): Promise<string | undefined> => {
+  const createFromTemplate = useCallback(async (template: NewDesign): Promise<string | undefined> => {
     try {
       const d = await api<Design>("POST", "/api/designs", {
         name: template.name,
